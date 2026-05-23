@@ -1,41 +1,31 @@
 package pl.edu.pk.checkers.server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
 
 public class GameSession implements Runnable {
-    private Socket client1Socket;
-    private int client1Id;
-    private Socket client2Socket;
-    private int client2Id;
+    private ClientData client1Data;
+    private ClientData client2Data;
 
-    public GameSession(Socket client1Socket, int client1Id, Socket client2Socket, int client2Id) {
-        this.client1Socket = client1Socket;
-        this.client1Id = client1Id;
-        this.client2Socket = client2Socket;
-        this.client2Id = client2Id;
+    public GameSession(ClientData client1Data, ClientData client2Data) {
+        this.client1Data = client1Data;
+        this.client2Data = client2Data;
     }
 
     @Override
     public void run() {
-        System.out.println("Clients: " + client1Id + ", " + client2Id + " succesfully connected, recieved GameSession Thread");
+        System.out.println("Clients: " + client1Data.getUsername() + ", " + client2Data.getUsername() + " succesfully connected, recieved GameSession Thread");
 
-        try ( PrintWriter client1Out = new PrintWriter(client1Socket.getOutputStream(), true);
-              BufferedReader client1In = new BufferedReader(new InputStreamReader(client1Socket.getInputStream()));
-              PrintWriter client2Out = new PrintWriter(client2Socket.getOutputStream(), true);
-              BufferedReader client2In = new BufferedReader(new InputStreamReader(client2Socket.getInputStream())) ) {
+        try {
+            client1Data.getOut().println("Succesful connection between Client " + client1Data.getUsername() + " and Client " + client2Data.getUsername());
+            client2Data.getOut().println("Succesful connection between Client " + client1Data.getUsername() + " and Client " + client2Data.getUsername());
 
-            client1Out.println("Succesful connection between Client" + client1Id + " and Client" + client2Id);
-            client2Out.println("Succesful connection between Client" + client1Id + " and Client" + client2Id);
-
-            client1Out.println("---TERMINATE---");
-            client2Out.println("---TERMINATE---");
-
-        } catch (IOException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            client1Data.getOut().println("---TERMINATE---");
+            client2Data.getOut().println("---TERMINATE---");
+        } finally {
+            try { client1Data.getSocket().close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
+            try { client2Data.getSocket().close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
+            System.out.println("Client " + client1Data.getUsername() + " and Client " + client2Data.getUsername() + " session terminated");
         }
+
     }
 }
