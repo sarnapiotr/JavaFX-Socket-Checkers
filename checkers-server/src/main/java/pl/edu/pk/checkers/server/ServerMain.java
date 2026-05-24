@@ -25,8 +25,8 @@ public class ServerMain {
             BufferedReader tempIn = null;
             PrintWriter tempOut = null;
             String tempUsername = null;
-            ClientData client1Data = null;
-            ClientData client2Data = null;
+            ClientHandler client1Handler = null;
+            ClientHandler client2Handler = null;
 
             while (true) {
                 tempSocket = serverSocket.accept();
@@ -35,15 +35,15 @@ public class ServerMain {
                 tempUsername = tempIn.readLine();
                 System.out.println("[CLIENT " + tempUsername + " CONNECTED]");
 
-                if (client1Data == null) {
+                if (client1Handler == null) {
                     tempOut.println("Waiting for opponent");
-                    client1Data = new ClientData(tempSocket, tempIn, tempOut, tempUsername);
+                    client1Handler = new ClientHandler(tempSocket, tempIn, tempOut, tempUsername);
                 } else {
-                    client2Data = new ClientData(tempSocket, tempIn, tempOut, tempUsername);
-                    GameSession gameSession = new GameSession(client1Data, client2Data);
+                    client2Handler = new ClientHandler(tempSocket, tempIn, tempOut, tempUsername);
+                    GameSession gameSession = new GameSession(client1Handler, client2Handler);
                     pool.execute(gameSession);
-                    client1Data = null;
-                    client2Data = null;
+                    client1Handler = null;
+                    client2Handler = null;
                 }
             }
         } catch (IOException e) {
