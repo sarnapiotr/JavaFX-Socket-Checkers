@@ -18,24 +18,53 @@ public class GameSession implements Runnable {
 
     @Override
     public void run() {
+        String jsonInput = null;
         Message clientMessage = null;
         Message serverMessage = null;
 
         System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " succesfully connected, recieved GameSession Thread");
 
         try {
-            clientMessage = new Message(MessageType.GAME_START, "Succesful connection between Client " + client1Handler.getUsername() + " and Client " + client2Handler.getUsername());
-            client1Handler.getOut().println(gson.toJson(clientMessage));
-            client2Handler.getOut().println(gson.toJson(clientMessage));
+            serverMessage = new Message(MessageType.GAME_START, "Succesful connection between Client " + client1Handler.getUsername() + " and Client " + client2Handler.getUsername());
+            client1Handler.getOut().println(gson.toJson(serverMessage));
+            client2Handler.getOut().println(gson.toJson(serverMessage));
 
-            clientMessage = new Message(MessageType.GAME_OVER, "");
-            client1Handler.getOut().println(gson.toJson(clientMessage));
-            client2Handler.getOut().println(gson.toJson(clientMessage));
+            boolean isRunning = true;
+            boolean isClient1Turn = true;
+
+            while (isRunning) {
+                ClientHandler activeClientHandler = isClient1Turn ? client1Handler : client2Handler;
+
+                serverMessage = new Message(MessageType.YOUR_TURN, "");
+                activeClientHandler.getOut().println(gson.toJson(serverMessage));
+
+                jsonInput = activeClientHandler.getIn().readLine();
+                if (jsonInput == null) break;
+                clientMessage = gson.fromJson(jsonInput, Message.class);
+
+                if (clientMessage.getContent().equals("---TERMINATE---")) {
+                    isRunning = false;
+                    continue;
+                }
+
+                if (clientMessage.getType() == MessageType.MOVE) {
+                    serverMessage = new Message(MessageType.BOARD_UPDATE, "Client " + activeClientHandler.getUsername() + " move: " + clientMessage.getContent());
+                    client1Handler.getOut().println(gson.toJson(serverMessage));
+                    client2Handler.getOut().println(gson.toJson(serverMessage));
+
+                    isClient1Turn = !isClient1Turn;
+                }
+            }
+
+            serverMessage = new Message(MessageType.GAME_OVER, "");
+            client1Handler.getOut().println(gson.toJson(serverMessage));
+            client2Handler.getOut().println(gson.toJson(serverMessage));
+        } catch (IOException e) {
+            System.err.println("Error caught: " + e.getMessage());
         } finally {
             try { client1Handler.getSocket().close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
             try { client2Handler.getSocket().close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
             System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " session terminated");
         }
-
     }
 }

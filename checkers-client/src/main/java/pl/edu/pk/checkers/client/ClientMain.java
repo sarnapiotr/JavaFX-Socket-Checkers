@@ -19,6 +19,7 @@ public class ClientMain {
     public static void main(String args[]) {
         Scanner sc = new Scanner(System.in);
         Message clientMessage = null;
+        String jsonInput = null;
         Message serverMessage = null;
 
         String username = "";
@@ -34,11 +35,35 @@ public class ClientMain {
             clientMessage = new Message(MessageType.JOIN, username);
             out.println(gson.toJson(clientMessage));
 
-            while ((serverMessage = gson.fromJson(in.readLine(), Message.class)) != null) {
-                if (serverMessage.getType() == MessageType.GAME_OVER)
-                    break;
+            boolean isRunning = true;
+            while (isRunning && (jsonInput = in.readLine()) != null) {
+                serverMessage = gson.fromJson(jsonInput, Message.class);
 
-                System.out.println(serverMessage.getContent());
+                switch (serverMessage.getType()) {
+                    case MessageType.WAITING:
+                        System.out.println(serverMessage.getContent());
+                        break;
+                    case MessageType.GAME_START:
+                        System.out.println(serverMessage.getContent());
+                        break;
+                    case MessageType.YOUR_TURN:
+                        String msg = "";
+                        System.out.println("Enter message: ");
+                        msg = sc.nextLine();
+                        clientMessage = new Message(MessageType.MOVE, msg);
+                        out.println(gson.toJson(clientMessage));
+                        break;
+                    case MessageType.BOARD_UPDATE:
+                        System.out.println(serverMessage.getContent());
+                        break;
+                    case MessageType.GAME_OVER:
+                        System.out.println(serverMessage.getContent());
+                        isRunning = false;
+                        break;
+                    default:
+                        System.out.println("Unknown MessageType");
+                        break;
+                }
             }
 
             System.out.println("Connection terminated");

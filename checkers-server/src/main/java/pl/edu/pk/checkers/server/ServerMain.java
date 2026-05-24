@@ -24,6 +24,7 @@ public class ServerMain {
         try ( ServerSocket serverSocket = new ServerSocket(PORT); ) {
             System.out.println("Server listening on port " + PORT);
 
+            String jsonInput = null;
             Message clientMessage = null;
             Message serverMessage = null;
 
@@ -35,7 +36,8 @@ public class ServerMain {
                 BufferedReader tempIn = new BufferedReader(new InputStreamReader(tempSocket.getInputStream()));
                 PrintWriter tempOut = new PrintWriter(tempSocket.getOutputStream(), true);
 
-                clientMessage = gson.fromJson(tempIn.readLine(), Message.class);
+                jsonInput = tempIn.readLine();
+                clientMessage = gson.fromJson(jsonInput, Message.class);
 
                 if (clientMessage != null && clientMessage.getType() == MessageType.JOIN) {
                     String tempUsername = clientMessage.getContent();
