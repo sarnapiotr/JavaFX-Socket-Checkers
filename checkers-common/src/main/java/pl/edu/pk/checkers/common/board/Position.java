@@ -1,4 +1,4 @@
-package pl.edu.pk.checkers.common;
+package pl.edu.pk.checkers.common.board;
 
 public class Position {
     private final int row;
@@ -28,10 +28,5 @@ public class Position {
     @Override
     public int hashCode() {
         return java.util.Objects.hash(row, col);
-    }
-
-    @Override
-    public String toString() {
-        return row + ", " + col;
     }
 }

@@ -1,9 +1,9 @@
 package pl.edu.pk.checkers.server;
 
 import com.google.gson.Gson;
-import pl.edu.pk.checkers.common.Board;
-import pl.edu.pk.checkers.common.Message;
-import pl.edu.pk.checkers.common.MessageType;
+import pl.edu.pk.checkers.common.board.Board;
+import pl.edu.pk.checkers.common.message.Message;
+import pl.edu.pk.checkers.common.message.MessageType;
 
 import java.io.IOException;
 

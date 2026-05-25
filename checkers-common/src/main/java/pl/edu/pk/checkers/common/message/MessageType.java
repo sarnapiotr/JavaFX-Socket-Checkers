@@ -1,4 +1,4 @@
-package pl.edu.pk.checkers.common;
+package pl.edu.pk.checkers.common.message;
 
 public enum MessageType {
     JOIN,

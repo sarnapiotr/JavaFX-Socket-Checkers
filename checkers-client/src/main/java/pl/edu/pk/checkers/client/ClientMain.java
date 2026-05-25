@@ -1,6 +1,6 @@
 package pl.edu.pk.checkers.client;
 
-import pl.edu.pk.checkers.common.MessageType;
+import pl.edu.pk.checkers.common.message.MessageType;
 
 import java.util.Scanner;
 
