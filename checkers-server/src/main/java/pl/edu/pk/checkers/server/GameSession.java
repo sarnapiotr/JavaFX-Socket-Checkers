@@ -1,6 +1,7 @@
 package pl.edu.pk.checkers.server;
 
 import com.google.gson.Gson;
+import pl.edu.pk.checkers.common.Board;
 import pl.edu.pk.checkers.common.Message;
 import pl.edu.pk.checkers.common.MessageType;
 
@@ -9,6 +10,7 @@ import java.io.IOException;
 public class GameSession implements Runnable {
     private ClientHandler client1Handler;
     private ClientHandler client2Handler;
+    private Board board = new Board();
     private static final Gson gson = new Gson();
 
     public GameSession(ClientHandler client1Handler, ClientHandler client2Handler) {
@@ -25,14 +27,14 @@ public class GameSession implements Runnable {
         System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " succesfully connected, recieved GameSession Thread");
 
         try {
-            serverMessage = new Message(MessageType.GAME_START, "Succesful connection between Client " + client1Handler.getUsername() + " and Client " + client2Handler.getUsername());
+            serverMessage = new Message(MessageType.GAME_START, "Succesful connection between Client " + client1Handler.getUsername() +
+                    " and Client " + client2Handler.getUsername() + "\nBoard: \n" + board.toString());
             client1Handler.getOut().println(gson.toJson(serverMessage));
             client2Handler.getOut().println(gson.toJson(serverMessage));
 
-            boolean isRunning = true;
-            boolean isClient1Turn = true;
+            boolean isClient1Turn = true; // Client1 is WhitePlayer, Client2 is BlackPlayer
 
-            while (isRunning) {
+            while (true) {
                 ClientHandler activeClientHandler = isClient1Turn ? client1Handler : client2Handler;
 
                 serverMessage = new Message(MessageType.YOUR_TURN, "");
@@ -43,8 +45,7 @@ public class GameSession implements Runnable {
                 clientMessage = gson.fromJson(jsonInput, Message.class);
 
                 if (clientMessage.getContent().equals("---TERMINATE---")) {
-                    isRunning = false;
-                    continue;
+                    break;
                 }
 
                 if (clientMessage.getType() == MessageType.MOVE) {
