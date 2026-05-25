@@ -9,22 +9,27 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.function.Consumer;
 
 public class SocketService {
     private static final String SERVER_ADDRESS = "127.0.0.1";
     private static final int SERVER_PORT = 8080;
     private static final Gson gson = new Gson();
 
-    private String username;
-    private volatile boolean isRunning = false;
-    private volatile boolean myTurn = false;
+    private final String username;
 
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
 
+    private Consumer<Message> handleServerMessage;
+
     public SocketService(String username) {
         this.username = username;
+    }
+
+    public void setHandleServerMessage(Consumer<Message> handleServerMessage) {
+        this.handleServerMessage = handleServerMessage;
     }
 
     public void startSocketService() {
@@ -43,10 +48,9 @@ public class SocketService {
                 clientMessage = new Message(MessageType.JOIN, username);
                 out.println(gson.toJson(clientMessage, Message.class));
 
-                isRunning = true;
-                while (isRunning && (jsonInput = in.readLine()) != null) {
+                while ((jsonInput = in.readLine()) != null) {
                     serverMessage = gson.fromJson(jsonInput, Message.class);
-                    handleServerMessage(serverMessage);
+                    handleServerMessage.accept(serverMessage);
                 }
 
                 System.out.println("Connection terminated");
@@ -57,40 +61,8 @@ public class SocketService {
         }).start();
     }
 
-    public void handleServerMessage(Message serverMessage) {
-        switch (serverMessage.getType()) {
-            case MessageType.WAITING:
-                System.out.println(serverMessage.getContent());
-                break;
-            case MessageType.GAME_START:
-                System.out.println(serverMessage.getContent());
-                break;
-            case MessageType.YOUR_TURN:
-                myTurn = true;
-                break;
-            case MessageType.BOARD_UPDATE:
-                System.out.println(serverMessage.getContent());
-                break;
-            case MessageType.GAME_OVER:
-                isRunning = false;
-                break;
-            default:
-                System.out.println("Unknown MessageType");
-                break;
-        }
-    }
-
-    public boolean isRunning() {
-        return isRunning;
-    }
-
-    public boolean isMyTurn() {
-        return myTurn;
-    }
-
     public void sendMove(String content) {
         Message clientMessage = new Message(MessageType.MOVE, content);
         out.println(gson.toJson(clientMessage, Message.class));
-        myTurn = false;
     }
 }

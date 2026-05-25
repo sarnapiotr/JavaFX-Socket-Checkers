@@ -1,5 +1,7 @@
 package pl.edu.pk.checkers.client;
 
+import pl.edu.pk.checkers.common.MessageType;
+
 import java.util.Scanner;
 
 public class ClientMain {
@@ -12,19 +14,34 @@ public class ClientMain {
         System.out.println("Connecting to the server");
 
         SocketService socketService = new SocketService(username);
-        socketService.startSocketService();
 
-        Thread.sleep(500);
-
-        while (socketService.isRunning()) {
-            if (socketService.isMyTurn()) {
-                String str = "";
-                System.out.println("Enter message: ");
-                str = sc.nextLine();
-                socketService.sendMove(str);
-            } else {
-                Thread.sleep(100);
+        socketService.setHandleServerMessage((serverMessage) -> {
+            switch (serverMessage.getType()) {
+                case MessageType.WAITING:
+                    System.out.println(serverMessage.getContent());
+                    break;
+                case MessageType.GAME_START:
+                    System.out.println(serverMessage.getContent());
+                    break;
+                case MessageType.YOUR_TURN:
+                    new Thread(() -> {
+                        String str = "";
+                        System.out.println("Enter message: ");
+                        str = sc.nextLine();
+                        socketService.sendMove(str);
+                    }).start();
+                    break;
+                case MessageType.BOARD_UPDATE:
+                    System.out.println(serverMessage.getContent());
+                    break;
+                case MessageType.GAME_OVER:
+                    break;
+                default:
+                    System.out.println("Unknown MessageType");
+                    break;
             }
-        }
+        });
+
+        socketService.startSocketService();
     }
 }
