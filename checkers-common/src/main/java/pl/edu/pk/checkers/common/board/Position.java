@@ -29,4 +29,9 @@ public class Position {
     public int hashCode() {
         return java.util.Objects.hash(row, col);
     }
+
+    @Override
+    public String toString() {
+        return row + ", " + col;
+    }
 }

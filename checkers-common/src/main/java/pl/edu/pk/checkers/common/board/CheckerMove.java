@@ -3,20 +3,32 @@ package pl.edu.pk.checkers.common.board;
 import java.util.List;
 
 public class CheckerMove {
+    private Position startPosition;
+    private List<Position> landingPositions;
+    private List<Position> capturedPositions;
     private Position endPosition;
-    private List<Position> capturedCheckers;
 
-    public CheckerMove(Position endPosition, List<Position> capturedCheckers) {
+    public CheckerMove(Position startPosition, List<Position> landingPositions, List<Position> capturedPositions, Position endPosition) {
+        this.startPosition = startPosition;
+        this.landingPositions = landingPositions;
+        this.capturedPositions = capturedPositions;
         this.endPosition = endPosition;
-        this.capturedCheckers = capturedCheckers;
+    }
+
+    public Position getStartPosition() {
+        return startPosition;
+    }
+
+    public List<Position> getLandingPositions() {
+        return landingPositions;
+    }
+
+    public List<Position> getCapturedPositions() {
+        return capturedPositions;
     }
 
     public Position getEndPosition() {
         return endPosition;
-    }
-
-    public List<Position> getCapturedCheckers() {
-        return capturedCheckers;
     }
 
     @Override
@@ -24,11 +36,28 @@ public class CheckerMove {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CheckerMove checkerMove = (CheckerMove) o;
-        return java.util.Objects.equals(endPosition, checkerMove.endPosition) && java.util.Objects.equals(capturedCheckers, checkerMove.capturedCheckers);
+        return java.util.Objects.equals(startPosition, checkerMove.startPosition) && java.util.Objects.equals(landingPositions, checkerMove.landingPositions) &&
+                java.util.Objects.equals(capturedPositions, checkerMove.capturedPositions) && java.util.Objects.equals(endPosition, checkerMove.endPosition);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(endPosition, capturedCheckers);
+        return java.util.Objects.hash(startPosition, landingPositions, capturedPositions, endPosition);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        str.append(startPosition).append("\n");
+        for (Position position : landingPositions) {
+            str.append(position).append(", ");
+        }
+        str.append("\n");
+        for (Position position : capturedPositions) {
+            str.append(position).append(", ");
+        }
+        str.append(endPosition);
+
+        return str.toString();
     }
 }

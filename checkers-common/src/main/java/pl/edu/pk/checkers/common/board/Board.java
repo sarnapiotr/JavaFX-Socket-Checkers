@@ -49,12 +49,12 @@ public class Board {
             return availableMoves;
 
         if (checkerType == CheckerType.WHITE || checkerType == CheckerType.BLACK) { // Simple checkers
-            findSimpleCaptures(startPosition, checkerType, new ArrayList<>(), availableMoves);
+            findSimpleCaptures(startPosition, startPosition, checkerType, new ArrayList<>(), new ArrayList<>(), availableMoves);
             if (availableMoves.isEmpty())
                 findSimpleMoves(startPosition, checkerType, availableMoves);
 
         } else if (checkerType == CheckerType.WHITE_KING || checkerType == CheckerType.BLACK_KING) { // King checkers
-            findKingCaptures(startPosition, checkerType, new ArrayList<>(), availableMoves);
+            findKingCaptures(startPosition, startPosition, checkerType, new ArrayList<>(), new ArrayList<>(), availableMoves);
             if (availableMoves.isEmpty())
                 findKingMoves(startPosition, availableMoves);
         }
@@ -71,8 +71,8 @@ public class Board {
         return isAllyWhite == isEnemyBlack;
     }
 
-    private void findSimpleCaptures(Position currentPosition, CheckerType checkerType, List<Position> capturedCheckers, List<CheckerMove> availableMoves) {
-        boolean foundFurtherJump = false;
+    private void findSimpleCaptures(Position startPosition, Position currentPosition, CheckerType checkerType, List<Position> landingPositions, List<Position> capturedPositions, List<CheckerMove> availableMoves) {
+        boolean foundFurtherCapture = false;
 
         for (int[] direction : DIRECTIONS) {
             int rowDirection = direction[0];
@@ -85,17 +85,19 @@ public class Board {
                 CheckerType enemyCheckerType = grid[enemyPosition.getRow()][enemyPosition.getCol()];
                 CheckerType landingCheckerType = grid[landingPosition.getRow()][landingPosition.getCol()];
 
-                if (isEnemy(checkerType, enemyCheckerType) && landingCheckerType == CheckerType.NONE && !capturedCheckers.contains(enemyPosition)) {
-                    foundFurtherJump = true;
-                    List<Position> newCapturedCheckers = new ArrayList<>(capturedCheckers);
-                    newCapturedCheckers.add(enemyPosition);
-                    findSimpleCaptures(landingPosition, checkerType, newCapturedCheckers, availableMoves);
+                if (isEnemy(checkerType, enemyCheckerType) && landingCheckerType == CheckerType.NONE && !capturedPositions.contains(enemyPosition)) {
+                    foundFurtherCapture = true;
+                    List<Position> newLandingPositions = new ArrayList<>(landingPositions);
+                    newLandingPositions.add(landingPosition);
+                    List<Position> newCapturedPositions = new ArrayList<>(capturedPositions);
+                    newCapturedPositions.add(enemyPosition);
+                    findSimpleCaptures(startPosition, landingPosition, checkerType, newLandingPositions, newCapturedPositions, availableMoves);
                 }
             }
         }
 
-        if (!foundFurtherJump && !capturedCheckers.isEmpty()) {
-            CheckerMove checkerMove = new CheckerMove(currentPosition, capturedCheckers);
+        if (!foundFurtherCapture && !capturedPositions.isEmpty()) {
+            CheckerMove checkerMove = new CheckerMove(startPosition, landingPositions, capturedPositions, currentPosition);
 
             if (!availableMoves.contains(checkerMove)) {
                 availableMoves.add(checkerMove);
@@ -103,58 +105,54 @@ public class Board {
         }
     }
 
-    private void findKingCaptures(Position currentPosition, CheckerType checkerType, List<Position> capturedCheckers, List<CheckerMove> availableMoves) {
-        boolean foundFurtherJump = false;
+    private void findKingCaptures(Position startPosition, Position currentPosition, CheckerType checkerType, List<Position> landingPositions, List<Position> capturedPositions, List<CheckerMove> availableMoves) {
+        boolean foundFurtherCapture = false;
 
         for (int[] direction : DIRECTIONS) {
+            boolean foundEnemy = false;
+
             int rowDirection = direction[0];
             int colDirection = direction[1];
 
-            int enemyRow = currentPosition.getRow() + rowDirection;
-            int enemyCol = currentPosition.getCol() + colDirection;
+            Position enemyPosition = new Position(currentPosition.getRow() + rowDirection, currentPosition.getCol() + colDirection);
 
-            Position enemyPosition = null;
+            while (isValidPosition(enemyPosition)) {
+                CheckerType enemyCheckerType = grid[enemyPosition.getRow()][enemyPosition.getCol()];
 
-            while (isValidPosition(new Position(enemyRow, enemyCol))) {
-                CheckerType enemyChekcerType = grid[enemyRow][enemyCol];
-
-                if (enemyChekcerType != CheckerType.NONE) {
-                    if (isEnemy(checkerType, enemyChekcerType) && !capturedCheckers.contains(new Position(enemyRow, enemyCol))) {
-                        enemyPosition = new Position(enemyRow, enemyCol);
+                if (enemyCheckerType != CheckerType.NONE) {
+                    if (isEnemy(checkerType, enemyCheckerType) && !capturedPositions.contains(enemyPosition)) {
+                        foundEnemy = true;
                     }
 
                     break;
                 }
-                enemyRow += rowDirection;
-                enemyCol += colDirection;
+
+                enemyPosition = new Position(enemyPosition.getRow() + rowDirection, enemyPosition.getCol() + colDirection);
             }
 
-            if (enemyPosition != null) {
-                int landingRow = enemyPosition.getRow() + rowDirection;
-                int landingCol = enemyPosition.getCol() + colDirection;
+            Position landingPosition = new Position(enemyPosition.getRow() + rowDirection, enemyPosition.getCol() + colDirection);
 
-                while (isValidPosition(new Position(landingRow, landingCol))) {
-                    if (grid[landingRow][landingCol] == CheckerType.NONE) {
-                        foundFurtherJump = true;
+            if (foundEnemy) {
+                while (isValidPosition(landingPosition)) {
+                    if (grid[landingPosition.getRow()][landingPosition.getCol()] == CheckerType.NONE) {
+                        foundFurtherCapture = true;
+                        List<Position> newLandingPositions = new ArrayList<>(landingPositions);
+                        newLandingPositions.add(landingPosition);
+                        List<Position> newCapturedPositions = new ArrayList<>(capturedPositions);
+                        newCapturedPositions.add(enemyPosition);
 
-                        List<Position> newCapturedCheckers = new ArrayList<>(capturedCheckers);
-                        newCapturedCheckers.add(enemyPosition);
-
-                        Position landingPosition = new Position(landingRow, landingCol);
-
-                        findKingCaptures(landingPosition, checkerType, newCapturedCheckers, availableMoves);
+                        findKingCaptures(startPosition, landingPosition, checkerType, newLandingPositions, newCapturedPositions, availableMoves);
                     } else {
                         break;
                     }
 
-                    landingRow += rowDirection;
-                    landingCol += colDirection;
+                    landingPosition = new Position(landingPosition.getRow() + rowDirection, landingPosition.getCol() + colDirection);
                 }
             }
         }
 
-        if (!foundFurtherJump && !capturedCheckers.isEmpty()) {
-            CheckerMove checkerMove = new CheckerMove(currentPosition, capturedCheckers);
+        if (!foundFurtherCapture && !capturedPositions.isEmpty()) {
+            CheckerMove checkerMove = new CheckerMove(startPosition, landingPositions, capturedPositions, currentPosition);
             if (!availableMoves.contains(checkerMove))
                 availableMoves.add(checkerMove);
         }
@@ -168,31 +166,31 @@ public class Board {
             if (checkerType == CheckerType.WHITE && rowDirection == 1) continue;
             if (checkerType == CheckerType.BLACK && rowDirection == -1) continue;
 
-            Position landingPosition = new Position(startPosition.getRow() + rowDirection, startPosition.getCol() + colDirection);
+            Position endPosition = new Position(startPosition.getRow() + rowDirection, startPosition.getCol() + colDirection);
 
-            if (isValidPosition(landingPosition) && grid[landingPosition.getRow()][landingPosition.getCol()] == CheckerType.NONE) {
-                availableMoves.add(new CheckerMove(landingPosition, new ArrayList<>()));
+            if (isValidPosition(endPosition) && grid[endPosition.getRow()][endPosition.getCol()] == CheckerType.NONE) {
+                availableMoves.add(new CheckerMove(startPosition, new ArrayList<>(), new ArrayList<>(), endPosition));
             }
         }
     }
 
-    private void findKingMoves(Position startPosition, List<CheckerMove> aviableMoves) {
+    private void findKingMoves(Position startPosition, List<CheckerMove> availableMoves) {
         for (int[] direction : DIRECTIONS) {
             int rowDirection = direction[0];
             int colDirection = direction[1];
 
-            int currentRow = startPosition.getRow() + rowDirection;
-            int currentCol = startPosition.getCol() + colDirection;
+            int endRow = startPosition.getRow() + rowDirection;
+            int endCol = startPosition.getCol() + colDirection;
 
-            while (isValidPosition(new Position(currentRow, currentCol))) {
-                if (grid[currentRow][currentCol] == CheckerType.NONE) {
-                    aviableMoves.add(new CheckerMove(new Position(currentRow, currentCol), new ArrayList<>()));
+            while (isValidPosition(new Position(endRow, endCol))) {
+                if (grid[endRow][endCol] == CheckerType.NONE) {
+                    availableMoves.add(new CheckerMove(startPosition, new ArrayList<>(), new ArrayList<>(), new Position(endRow, endCol)));
                 } else {
                     break;
                 }
 
-                currentRow += rowDirection;
-                currentCol += colDirection;
+                endRow += rowDirection;
+                endCol += colDirection;
             }
         }
     }
@@ -205,12 +203,12 @@ public class Board {
                     List<CheckerMove> availableMoves = new ArrayList<>();
 
                     if (isWhitePlayer && checkerType == CheckerType.WHITE || !isWhitePlayer && checkerType == CheckerType.BLACK) {
-                        findSimpleCaptures(new Position(row, col), checkerType, new ArrayList<>(), availableMoves);
+                        findSimpleCaptures(new Position(row, col), new Position(row, col), checkerType, new ArrayList<>(), new ArrayList<>(), availableMoves);
                         if (!availableMoves.isEmpty()) {
                             return true;
                         }
                     } else if (isWhitePlayer && checkerType == CheckerType.WHITE_KING || !isWhitePlayer && checkerType == CheckerType.BLACK_KING) {
-                        findKingCaptures(new Position(row, col), checkerType, new ArrayList<>(), availableMoves);
+                        findKingCaptures(new Position(row, col), new Position(row, col), checkerType, new ArrayList<>(), new ArrayList<>(), availableMoves);
                         if (!availableMoves.isEmpty()) {
                             return true;
                         }
@@ -221,9 +219,9 @@ public class Board {
         return false;
     }
 
-    public void executeMove(Position startPosition, CheckerMove checkerMove) {
-        int startRow = startPosition.getRow();
-        int startCol = startPosition.getCol();
+    public void executeMove(CheckerMove checkerMove) {
+        int startRow = checkerMove.getStartPosition().getRow();
+        int startCol = checkerMove.getStartPosition().getCol();
         int endRow = checkerMove.getEndPosition().getRow();
         int endCol = checkerMove.getEndPosition().getCol();
 
@@ -239,37 +237,37 @@ public class Board {
         grid[endRow][endCol] = endCheckerType;
         grid[startRow][startCol] = CheckerType.NONE;
 
-        for (Position position : checkerMove.getCapturedCheckers()) {
+        for (Position position : checkerMove.getCapturedPositions()) {
             grid[position.getRow()][position.getCol()] = CheckerType.NONE;
         }
     }
 
     @Override
     public String toString() {
-        String str = "";
+        StringBuilder str = new StringBuilder();
         for (int row = 0; row < SIZE; row++) {
             for (int col = 0; col < SIZE; col++) {
                 switch (grid[row][col]) {
                     case CheckerType.NONE:
-                        str += "N  ";
+                        str.append("N  ");
                         break;
                     case CheckerType.WHITE:
-                        str += "W  ";
+                        str.append("W  ");
                         break;
                     case CheckerType.BLACK:
-                        str += "B  ";
+                        str.append("B  ");
                         break;
                     case CheckerType.WHITE_KING:
-                        str += "WK ";
+                        str.append("WK ");
                         break;
                     case CheckerType.BLACK_KING:
-                        str += "BK ";
+                        str.append("BK ");
                         break;
                 }
             }
-            str += "\n";
+            str.append("\n");
         }
 
-        return str;
+        return str.toString();
     }
 }
