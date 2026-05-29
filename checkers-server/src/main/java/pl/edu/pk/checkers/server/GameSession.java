@@ -27,8 +27,8 @@ public class GameSession implements Runnable {
         System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " succesfully connected, recieved GameSession Thread");
 
         try {
-            serverMessage = new Message(MessageType.GAME_START, "Succesful connection between Client " + client1Handler.getUsername() +
-                    " and Client " + client2Handler.getUsername() + "\nBoard: \n" + board.toString());
+            serverMessage = new Message(MessageType.GAME_START, gson.toJsonTree("Succesful connection between Client " + client1Handler.getUsername() +
+                    " and Client " + client2Handler.getUsername() + "\nBoard: \n" + board.toString()));
             client1Handler.getOut().println(gson.toJson(serverMessage));
             client2Handler.getOut().println(gson.toJson(serverMessage));
 
@@ -37,19 +37,19 @@ public class GameSession implements Runnable {
             while (true) {
                 ClientHandler activeClientHandler = isClient1Turn ? client1Handler : client2Handler;
 
-                serverMessage = new Message(MessageType.YOUR_TURN, "");
+                serverMessage = new Message(MessageType.YOUR_TURN, gson.toJsonTree(""));
                 activeClientHandler.getOut().println(gson.toJson(serverMessage));
 
                 jsonInput = activeClientHandler.getIn().readLine();
                 if (jsonInput == null) break;
                 clientMessage = gson.fromJson(jsonInput, Message.class);
 
-                if (clientMessage.getContent().equals("---TERMINATE---")) {
+                if (gson.fromJson(clientMessage.getContent(), String.class).equals("---TERMINATE---")) {
                     break;
                 }
 
                 if (clientMessage.getType() == MessageType.MOVE) {
-                    serverMessage = new Message(MessageType.BOARD_UPDATE, "Client " + activeClientHandler.getUsername() + " move: " + clientMessage.getContent());
+                    serverMessage = new Message(MessageType.BOARD_UPDATE, gson.toJsonTree("Client " + activeClientHandler.getUsername() + " move: " + clientMessage.getContent()));
                     client1Handler.getOut().println(gson.toJson(serverMessage));
                     client2Handler.getOut().println(gson.toJson(serverMessage));
 
@@ -57,7 +57,7 @@ public class GameSession implements Runnable {
                 }
             }
 
-            serverMessage = new Message(MessageType.GAME_OVER, "");
+            serverMessage = new Message(MessageType.GAME_OVER, gson.toJsonTree(""));
             client1Handler.getOut().println(gson.toJson(serverMessage));
             client2Handler.getOut().println(gson.toJson(serverMessage));
         } catch (IOException e) {

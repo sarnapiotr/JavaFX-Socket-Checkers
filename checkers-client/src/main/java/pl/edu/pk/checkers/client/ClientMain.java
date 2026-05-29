@@ -21,18 +21,18 @@ public class ClientMain {
                     System.out.println(serverMessage.getContent());
                     break;
                 case MessageType.GAME_START:
-                    System.out.println(serverMessage.getContent());
+                    System.out.println(socketService.getMessageString(serverMessage));
                     break;
                 case MessageType.YOUR_TURN:
                     new Thread(() -> {
                         String str = "";
                         System.out.println("Enter message: ");
                         str = sc.nextLine();
-                        socketService.sendMove(str);
+                        socketService.sendString(str);
                     }).start();
                     break;
                 case MessageType.BOARD_UPDATE:
-                    System.out.println(serverMessage.getContent());
+                    System.out.println(socketService.getMessageString(serverMessage));
                     break;
                 case MessageType.GAME_OVER:
                     break;

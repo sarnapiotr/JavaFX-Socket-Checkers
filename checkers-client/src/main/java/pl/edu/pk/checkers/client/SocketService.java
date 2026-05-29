@@ -45,7 +45,7 @@ public class SocketService {
                 String jsonInput = null;
                 Message serverMessage = null;
 
-                clientMessage = new Message(MessageType.JOIN, username);
+                clientMessage = new Message(MessageType.JOIN, gson.toJsonTree(username));
                 out.println(gson.toJson(clientMessage, Message.class));
 
                 while ((jsonInput = in.readLine()) != null) {
@@ -61,8 +61,12 @@ public class SocketService {
         }).start();
     }
 
-    public void sendMove(String content) {
-        Message clientMessage = new Message(MessageType.MOVE, content);
+    public void sendString(String content) {
+        Message clientMessage = new Message(MessageType.MOVE, gson.toJsonTree(content));
         out.println(gson.toJson(clientMessage, Message.class));
+    }
+
+    public String getMessageString(Message message) {
+        return gson.fromJson(message.getContent(), String.class);
     }
 }

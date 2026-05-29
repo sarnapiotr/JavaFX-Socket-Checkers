@@ -1,6 +1,7 @@
 package pl.edu.pk.checkers.server;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import pl.edu.pk.checkers.common.message.Message;
 import pl.edu.pk.checkers.common.message.MessageType;
 
@@ -19,9 +20,10 @@ public class ServerMain {
 
     public static void main(String args[]) {
         System.out.println("Server started");
-        ExecutorService pool = Executors.newCachedThreadPool();
 
-        try ( ServerSocket serverSocket = new ServerSocket(PORT); ) {
+        try ( ServerSocket serverSocket = new ServerSocket(PORT);
+              ExecutorService pool = Executors.newCachedThreadPool(); ) {
+
             System.out.println("Server listening on port " + PORT);
 
             String jsonInput = null;
@@ -40,11 +42,11 @@ public class ServerMain {
                 clientMessage = gson.fromJson(jsonInput, Message.class);
 
                 if (clientMessage != null && clientMessage.getType() == MessageType.JOIN) {
-                    String tempUsername = clientMessage.getContent();
+                    String tempUsername = gson.fromJson(clientMessage.getContent(), String.class);
                     System.out.println("[CLIENT " + tempUsername + " CONNECTED]");
 
                     if (client1Handler == null) {
-                        serverMessage = new Message(MessageType.WAITING, "Waiting for opponent");
+                        serverMessage = new Message(MessageType.WAITING, gson.toJsonTree("Waiting for opponent"));
                         tempOut.println(gson.toJson(serverMessage));
                         client1Handler = new ClientHandler(tempSocket, tempIn, tempOut, tempUsername);
                     } else {
@@ -58,9 +60,20 @@ public class ServerMain {
             }
         } catch (IOException e) {
             System.err.println("Error caught: " + e.getMessage());
-        } finally {
-            pool.shutdown();
-            System.out.println("Server terminated");
         }
+
+        System.out.println("Server terminated");
     }
 }
+
+/*
+Recieve
+String jsonInput = in.readLine();
+Message message = gson.fromJson(jsonInput, Message.class);
+MessageType type = message.getType();
+String str = gson.fromJson(message.getContent(), String.class);
+
+Send
+Message message = new Message(MessageType.TYPE, gson.toJsonTree(sentObject));
+out.println(gson.toJson(message));
+*/

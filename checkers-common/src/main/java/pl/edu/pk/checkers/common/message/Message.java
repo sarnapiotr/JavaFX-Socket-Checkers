@@ -1,10 +1,12 @@
 package pl.edu.pk.checkers.common.message;
 
+import com.google.gson.JsonElement;
+
 public class Message {
     private MessageType type;
-    private String content;
+    private JsonElement content;
 
-    public Message(MessageType type, String content) {
+    public Message(MessageType type, JsonElement content) {
         this.type = type;
         this.content = content;
     }
@@ -13,7 +15,7 @@ public class Message {
         return type;
     }
 
-    public String getContent() {
+    public JsonElement getContent() {
         return content;
     }
 }
