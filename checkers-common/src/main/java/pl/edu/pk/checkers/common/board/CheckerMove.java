@@ -1,17 +1,18 @@
 package pl.edu.pk.checkers.common.board;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CheckerMove {
-    private Position startPosition;
-    private List<Position> landingPositions;
-    private List<Position> capturedPositions;
-    private Position endPosition;
+    private final Position startPosition;
+    private final List<Position> landingPositions;
+    private final List<Position> capturedPositions;
+    private final Position endPosition;
 
     public CheckerMove(Position startPosition, List<Position> landingPositions, List<Position> capturedPositions, Position endPosition) {
         this.startPosition = startPosition;
-        this.landingPositions = landingPositions;
-        this.capturedPositions = capturedPositions;
+        this.landingPositions = new ArrayList<>(landingPositions);
+        this.capturedPositions = new ArrayList<>(capturedPositions);
         this.endPosition = endPosition;
     }
 
