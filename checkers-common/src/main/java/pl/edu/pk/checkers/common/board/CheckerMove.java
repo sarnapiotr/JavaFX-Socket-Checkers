@@ -50,12 +50,13 @@ public class CheckerMove {
         StringBuilder str = new StringBuilder();
         str.append(startPosition).append("\n");
         for (Position position : landingPositions) {
-            str.append(position).append(", ");
+            str.append(position).append(" | ");
         }
         str.append("\n");
         for (Position position : capturedPositions) {
-            str.append(position).append(", ");
+            str.append(position).append(" | ");
         }
+        str.append("\n");
         str.append(endPosition);
 
         return str.toString();
