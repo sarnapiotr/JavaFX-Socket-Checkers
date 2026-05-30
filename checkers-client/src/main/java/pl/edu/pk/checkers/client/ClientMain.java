@@ -5,7 +5,7 @@ import pl.edu.pk.checkers.common.message.MessageType;
 import java.util.Scanner;
 
 public class ClientMain {
-    public static void main(String args[]) throws InterruptedException {
+    public static void main(String args[]) {
         Scanner sc = new Scanner(System.in);
 
         String username = "";
@@ -18,21 +18,21 @@ public class ClientMain {
         socketService.setHandleServerMessage((serverMessage) -> {
             switch (serverMessage.getType()) {
                 case MessageType.WAITING:
-                    System.out.println(serverMessage.getContent());
+                    System.out.println(serverMessage.getContentAs(String.class));
                     break;
                 case MessageType.GAME_START:
-                    System.out.println(socketService.getMessageString(serverMessage));
+                    System.out.println(serverMessage.getContentAs(String.class));
                     break;
                 case MessageType.YOUR_TURN:
                     new Thread(() -> {
                         String str = "";
                         System.out.println("Enter message: ");
                         str = sc.nextLine();
-                        socketService.sendString(str);
+                        socketService.getMessageHandler().sendMessage(MessageType.MOVE, str);
                     }).start();
                     break;
                 case MessageType.BOARD_UPDATE:
-                    System.out.println(socketService.getMessageString(serverMessage));
+                    System.out.println(serverMessage.getContentAs(String.class));
                     break;
                 case MessageType.GAME_OVER:
                     break;

@@ -1,6 +1,5 @@
 package pl.edu.pk.checkers.server;
 
-import com.google.gson.Gson;
 import pl.edu.pk.checkers.common.board.Board;
 import pl.edu.pk.checkers.common.message.Message;
 import pl.edu.pk.checkers.common.message.MessageType;
@@ -8,10 +7,9 @@ import pl.edu.pk.checkers.common.message.MessageType;
 import java.io.IOException;
 
 public class GameSession implements Runnable {
-    private ClientHandler client1Handler;
-    private ClientHandler client2Handler;
-    private Board board = new Board();
-    private static final Gson gson = new Gson();
+    private final ClientHandler client1Handler;
+    private final ClientHandler client2Handler;
+    private final Board board = new Board();
 
     public GameSession(ClientHandler client1Handler, ClientHandler client2Handler) {
         this.client1Handler = client1Handler;
@@ -20,46 +18,39 @@ public class GameSession implements Runnable {
 
     @Override
     public void run() {
-        String jsonInput = null;
         Message clientMessage = null;
-        Message serverMessage = null;
 
-        System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " succesfully connected, recieved GameSession Thread");
+        System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " successfully connected, received GameSession Thread");
 
         try {
-            serverMessage = new Message(MessageType.GAME_START, gson.toJsonTree("Succesful connection between Client " + client1Handler.getUsername() +
-                    " and Client " + client2Handler.getUsername() + "\nBoard: \n" + board.toString()));
-            client1Handler.getOut().println(gson.toJson(serverMessage));
-            client2Handler.getOut().println(gson.toJson(serverMessage));
+            String startMessage = "Succesful connection between Client " + client1Handler.getUsername() + " and Client " + client2Handler.getUsername() + "\nBoard: \n" + board;
+            client1Handler.getMessageHandler().sendMessage(MessageType.GAME_START, startMessage);
+            client2Handler.getMessageHandler().sendMessage(MessageType.GAME_START, startMessage);
 
             boolean isClient1Turn = true; // Client1 is WhitePlayer, Client2 is BlackPlayer
 
             while (true) {
                 ClientHandler activeClientHandler = isClient1Turn ? client1Handler : client2Handler;
 
-                serverMessage = new Message(MessageType.YOUR_TURN, gson.toJsonTree(""));
-                activeClientHandler.getOut().println(gson.toJson(serverMessage));
+                activeClientHandler.getMessageHandler().sendMessage(MessageType.YOUR_TURN, "");
 
-                jsonInput = activeClientHandler.getIn().readLine();
-                if (jsonInput == null) break;
-                clientMessage = gson.fromJson(jsonInput, Message.class);
+                if ((clientMessage = activeClientHandler.getMessageHandler().receiveMessage()) == null) break;
 
-                if (gson.fromJson(clientMessage.getContent(), String.class).equals("---TERMINATE---")) {
+                if (clientMessage.getContentAs(String.class).equals("---TERMINATE---")) {
                     break;
                 }
 
                 if (clientMessage.getType() == MessageType.MOVE) {
-                    serverMessage = new Message(MessageType.BOARD_UPDATE, gson.toJsonTree("Client " + activeClientHandler.getUsername() + " move: " + clientMessage.getContent()));
-                    client1Handler.getOut().println(gson.toJson(serverMessage));
-                    client2Handler.getOut().println(gson.toJson(serverMessage));
+                    String moveMessage = "Client " + activeClientHandler.getUsername() + " move: " + clientMessage.getContentAs(String.class);
+                    client1Handler.getMessageHandler().sendMessage(MessageType.BOARD_UPDATE, moveMessage);
+                    client2Handler.getMessageHandler().sendMessage(MessageType.BOARD_UPDATE, moveMessage);
 
                     isClient1Turn = !isClient1Turn;
                 }
             }
 
-            serverMessage = new Message(MessageType.GAME_OVER, gson.toJsonTree(""));
-            client1Handler.getOut().println(gson.toJson(serverMessage));
-            client2Handler.getOut().println(gson.toJson(serverMessage));
+            client1Handler.getMessageHandler().sendMessage(MessageType.GAME_OVER, "");
+            client2Handler.getMessageHandler().sendMessage(MessageType.GAME_OVER, "");
         } catch (IOException e) {
             System.err.println("Error caught: " + e.getMessage());
         } finally {

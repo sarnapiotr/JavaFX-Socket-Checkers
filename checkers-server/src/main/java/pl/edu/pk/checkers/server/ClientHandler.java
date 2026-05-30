@@ -1,19 +1,19 @@
 package pl.edu.pk.checkers.server;
 
+import pl.edu.pk.checkers.common.message.MessageHandler;
+
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ClientHandler {
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
-    private String username;
+    private final Socket socket;
+    private final MessageHandler messageHandler;
+    private final String username;
 
-    public ClientHandler(Socket socket, BufferedReader in, PrintWriter out, String username) {
+    public ClientHandler(Socket socket, MessageHandler messageHandler, String username) {
         this.socket = socket;
-        this.in = in;
-        this.out = out;
+        this.messageHandler = messageHandler;
         this.username = username;
     }
 
@@ -21,12 +21,8 @@ public class ClientHandler {
         return socket;
     }
 
-    public BufferedReader getIn() {
-        return in;
-    }
-
-    public PrintWriter getOut() {
-        return out;
+    public MessageHandler getMessageHandler() {
+        return messageHandler;
     }
 
     public String getUsername() {

@@ -1,7 +1,7 @@
 package pl.edu.pk.checkers.client;
 
-import com.google.gson.Gson;
 import pl.edu.pk.checkers.common.message.Message;
+import pl.edu.pk.checkers.common.message.MessageHandler;
 import pl.edu.pk.checkers.common.message.MessageType;
 
 import java.io.BufferedReader;
@@ -14,14 +14,9 @@ import java.util.function.Consumer;
 public class SocketService {
     private static final String SERVER_ADDRESS = "127.0.0.1";
     private static final int SERVER_PORT = 8080;
-    private static final Gson gson = new Gson();
 
     private final String username;
-
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
-
+    private MessageHandler messageHandler;
     private Consumer<Message> handleServerMessage;
 
     public SocketService(String username) {
@@ -34,22 +29,17 @@ public class SocketService {
 
     public void startSocketService() {
         new Thread(() -> {
-            try {
-                socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                out = new PrintWriter(socket.getOutputStream(), true);
+            try ( Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT); ) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                messageHandler = new MessageHandler(in, out);
 
                 System.out.println("Connected to server");
 
-                Message clientMessage = null;
-                String jsonInput = null;
+                messageHandler.sendMessage(MessageType.JOIN, username);
+
                 Message serverMessage = null;
-
-                clientMessage = new Message(MessageType.JOIN, gson.toJsonTree(username));
-                out.println(gson.toJson(clientMessage, Message.class));
-
-                while ((jsonInput = in.readLine()) != null) {
-                    serverMessage = gson.fromJson(jsonInput, Message.class);
+                while ((serverMessage = messageHandler.receiveMessage()) != null) {
                     handleServerMessage.accept(serverMessage);
                 }
 
@@ -61,12 +51,7 @@ public class SocketService {
         }).start();
     }
 
-    public void sendString(String content) {
-        Message clientMessage = new Message(MessageType.MOVE, gson.toJsonTree(content));
-        out.println(gson.toJson(clientMessage, Message.class));
-    }
-
-    public String getMessageString(Message message) {
-        return gson.fromJson(message.getContent(), String.class);
+    public MessageHandler getMessageHandler() {
+        return messageHandler;
     }
 }
