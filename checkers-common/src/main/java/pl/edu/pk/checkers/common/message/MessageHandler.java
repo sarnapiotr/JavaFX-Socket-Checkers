@@ -29,7 +29,7 @@ public class MessageHandler {
 }
 
 /*
-Recieve
+Receive
 String jsonInput = in.readLine();
 Message message = gson.fromJson(jsonInput, Message.class);
 MessageType type = message.getType();
