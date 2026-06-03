@@ -1,7 +1,5 @@
 package pl.edu.pk.checkers.server;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import pl.edu.pk.checkers.common.message.Message;
 import pl.edu.pk.checkers.common.message.MessageHandler;
 import pl.edu.pk.checkers.common.message.MessageType;
