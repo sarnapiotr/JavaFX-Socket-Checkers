@@ -9,11 +9,13 @@ import java.net.Socket;
 public class ClientHandler {
     private final Socket socket;
     private final MessageHandler messageHandler;
+    private final int clientId;
     private final String username;
 
-    public ClientHandler(Socket socket, MessageHandler messageHandler, String username) {
+    public ClientHandler(Socket socket, MessageHandler messageHandler, int clientId, String username) {
         this.socket = socket;
         this.messageHandler = messageHandler;
+        this.clientId = clientId;
         this.username = username;
     }
 
@@ -23,6 +25,10 @@ public class ClientHandler {
 
     public MessageHandler getMessageHandler() {
         return messageHandler;
+    }
+
+    public int getClientId() {
+        return clientId;
     }
 
     public String getUsername() {

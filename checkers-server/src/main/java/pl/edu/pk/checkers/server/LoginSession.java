@@ -1,0 +1,71 @@
+package pl.edu.pk.checkers.server;
+
+import pl.edu.pk.checkers.common.message.AuthData;
+import pl.edu.pk.checkers.common.message.Message;
+import pl.edu.pk.checkers.common.message.MessageHandler;
+import pl.edu.pk.checkers.common.message.MessageType;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+public class LoginSession implements Runnable {
+    private final Socket socket;
+    private final DatabaseManager databaseManager;
+    private final ServerLobby serverLobby;
+
+    public LoginSession(Socket socket, DatabaseManager databaseManager, ServerLobby serverLobby) {
+        this.socket = socket;
+        this.databaseManager = databaseManager;
+        this.serverLobby = serverLobby;
+    }
+
+    @Override
+    public void run() {
+        boolean isAuthenticated = false;
+
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            MessageHandler messageHandler = new MessageHandler(in, out);
+
+            Message clientMessage;
+            while ((clientMessage = messageHandler.receiveMessage()) != null) {
+                if (clientMessage.getType() == MessageType.LOGIN) {
+                    AuthData authData = clientMessage.getContentAs(AuthData.class);
+                    int clientId = databaseManager.authenticateUser(authData.getUsername(), authData.getPassword());
+
+                    if (clientId != -1) {
+                        messageHandler.sendMessage(MessageType.LOGIN_SUCCESS, "");
+
+                        ClientHandler clientHandler = new ClientHandler(socket, messageHandler, clientId, authData.getUsername());
+                        serverLobby.addClientToQueue(clientHandler);
+
+                        isAuthenticated = true;
+                        break;
+                    } else {
+                        messageHandler.sendMessage(MessageType.ERROR, "Incorrect username or password");
+                    }
+                } else if (clientMessage.getType() == MessageType.REGISTER) {
+                    AuthData authData = clientMessage.getContentAs(AuthData.class);
+                    boolean isRegistered = databaseManager.registerUser(authData.getUsername(), authData.getPassword());
+
+                    if (isRegistered) {
+                        messageHandler.sendMessage(MessageType.REGISTER_SUCCESS, "");
+                    } else {
+                        messageHandler.sendMessage(MessageType.ERROR, "Username already in use");
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error caught: " + e.getMessage());
+        } finally {
+            if (!isAuthenticated) {
+                try { socket.close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
+                System.out.println("Client disconnected before authentication.");
+            }
+        }
+    }
+}

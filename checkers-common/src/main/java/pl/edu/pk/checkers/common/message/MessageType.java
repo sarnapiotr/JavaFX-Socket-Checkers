@@ -1,11 +1,15 @@
 package pl.edu.pk.checkers.common.message;
 
 public enum MessageType {
-    JOIN,
+    LOGIN,
+    REGISTER,
+    LOGIN_SUCCESS,
+    REGISTER_SUCCESS,
     WAITING,
     GAME_START,
     YOUR_TURN,
     MOVE,
     BOARD_UPDATE,
-    GAME_OVER
+    GAME_OVER,
+    ERROR
 }
