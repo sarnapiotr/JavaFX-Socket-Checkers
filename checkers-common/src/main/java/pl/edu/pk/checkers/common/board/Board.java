@@ -28,6 +28,14 @@ public class Board {
         }
     }
 
+    public CheckerType[][] getGrid() {
+        return grid;
+    }
+
+    public void setGrid(CheckerType[][] grid) {
+        this.grid = grid;
+    }
+
     private boolean isValidPosition(Position position) {
         return position.getRow() >= 0 && position.getRow() < SIZE && position.getCol() >= 0 && position.getCol() < SIZE;
     }

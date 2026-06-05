@@ -11,5 +11,7 @@ public enum MessageType {
     MOVE,
     BOARD_UPDATE,
     GAME_OVER,
+    PLAY_AGAIN,
+    QUIT,
     ERROR
 }
