@@ -24,7 +24,7 @@ public class LoginSession implements Runnable {
 
     @Override
     public void run() {
-        boolean isAuthenticated = false;
+        boolean isLoggedIn = false;
 
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -35,7 +35,7 @@ public class LoginSession implements Runnable {
             while ((clientMessage = messageHandler.receiveMessage()) != null) {
                 if (clientMessage.getType() == MessageType.LOGIN) {
                     AuthData authData = clientMessage.getContentAs(AuthData.class);
-                    int clientId = databaseManager.authenticateUser(authData.getUsername(), authData.getPassword());
+                    int clientId = databaseManager.loginUser(authData.getUsername(), authData.getPassword());
 
                     if (clientId != -1) {
                         messageHandler.sendMessage(MessageType.LOGIN_SUCCESS, "");
@@ -43,10 +43,10 @@ public class LoginSession implements Runnable {
                         ClientHandler clientHandler = new ClientHandler(socket, messageHandler, clientId, authData.getUsername());
                         serverLobby.addClientToQueue(clientHandler);
 
-                        isAuthenticated = true;
+                        isLoggedIn = true;
                         break;
                     } else {
-                        messageHandler.sendMessage(MessageType.ERROR, "Incorrect username or password");
+                        messageHandler.sendMessage(MessageType.ERROR, "Login error");
                     }
                 } else if (clientMessage.getType() == MessageType.REGISTER) {
                     AuthData authData = clientMessage.getContentAs(AuthData.class);
@@ -55,16 +55,16 @@ public class LoginSession implements Runnable {
                     if (isRegistered) {
                         messageHandler.sendMessage(MessageType.REGISTER_SUCCESS, "");
                     } else {
-                        messageHandler.sendMessage(MessageType.ERROR, "Username already in use");
+                        messageHandler.sendMessage(MessageType.ERROR, "Register error");
                     }
                 }
             }
         } catch (IOException e) {
             System.err.println("Error caught: " + e.getMessage());
         } finally {
-            if (!isAuthenticated) {
+            if (!isLoggedIn) {
                 try { socket.close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
-                System.out.println("Client disconnected before authentication.");
+                System.out.println("Client disconnected before logging in");
             }
         }
     }

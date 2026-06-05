@@ -31,11 +31,7 @@ public class ServerLobby implements Runnable {
                 pool.execute(gameSession);
             }
 
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                System.err.println("Error caught: " + e.getMessage());
-            }
+            try { Thread.sleep(100); } catch (InterruptedException e) { System.err.println("Error caught: " + e.getMessage()); }
         }
     }
 }

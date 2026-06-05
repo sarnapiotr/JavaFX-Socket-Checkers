@@ -22,7 +22,19 @@ public class GameSession implements Runnable {
     public void run() {
         System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " successfully connected, received GameSession Thread");
 
-        try {
+        // client1Handler & client2Handler GAME_START message, sending username, opponentUsername, isWhitePlayer
+
+        boolean isClient1Turn = true; // Client1 is WhitePlayer, Client2 is BlackPlayer
+        Message clientMessage = null;
+        while (true) {
+            ClientHandler acviteClientHandler = isClient1Turn ? client1Handler : client2Handler;
+            acviteClientHandler.getMessageHandler().sendMessage(MessageType.YOUR_TURN, "");
+        }
+    }
+}
+
+/*
+try {
             String startMessage = "Succesful connection between Client " + client1Handler.getUsername() + " and Client " + client2Handler.getUsername() + "\nBoard: \n" + board;
             client1Handler.getMessageHandler().sendMessage(MessageType.GAME_START, startMessage);
             client2Handler.getMessageHandler().sendMessage(MessageType.GAME_START, startMessage);
@@ -58,5 +70,4 @@ public class GameSession implements Runnable {
             try { client2Handler.getSocket().close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
             System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " session terminated");
         }
-    }
-}
+ */

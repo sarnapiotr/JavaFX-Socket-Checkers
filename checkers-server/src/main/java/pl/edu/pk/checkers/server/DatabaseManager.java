@@ -39,12 +39,13 @@ public class DatabaseManager {
                     "gamesPlayed INT DEFAULT 0)");
 
             System.out.println("Table 'clients' checked/created");
+
         } catch (SQLException e) {
             System.err.println("Error caught: " + e.getMessage());
         }
     }
 
-    public int authenticateUser(String username, String password) {
+    public int loginUser(String username, String password) {
         String sql = "SELECT clientId, password FROM clients WHERE username = ?";
 
         try (Connection conn = DriverManager.getConnection(URL_DB, USER, PASSWORD);
