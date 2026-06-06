@@ -27,7 +27,7 @@ public class ServerLobby implements Runnable {
             if (clientQueue.size() >= 2) {
                 ClientHandler client1Handler = clientQueue.poll();
                 ClientHandler client2Handler = clientQueue.poll();
-                GameSession gameSession = new GameSession(client1Handler, client2Handler, databaseManager);
+                GameSession gameSession = new GameSession(client1Handler, client2Handler, databaseManager, this);
                 pool.execute(gameSession);
             }
 

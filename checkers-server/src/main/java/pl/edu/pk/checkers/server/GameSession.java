@@ -1,73 +1,115 @@
 package pl.edu.pk.checkers.server;
 
 import pl.edu.pk.checkers.common.board.Board;
-import pl.edu.pk.checkers.common.message.Message;
-import pl.edu.pk.checkers.common.message.MessageType;
+import pl.edu.pk.checkers.common.board.CheckerMove;
+import pl.edu.pk.checkers.common.message.*;
 
 import java.io.IOException;
+import java.util.List;
 
 public class GameSession implements Runnable {
-    private final ClientHandler client1Handler;
-    private final ClientHandler client2Handler;
+    private final ClientHandler client1Handler; // Always WhitePlayer
+    private final ClientHandler client2Handler; // Always BlackPlayer
     private final DatabaseManager databaseManager;
+    private final ServerLobby serverLobby;
     private final Board board = new Board();
 
-    public GameSession(ClientHandler client1Handler, ClientHandler client2Handler, DatabaseManager databaseManager) {
+    public GameSession(ClientHandler client1Handler, ClientHandler client2Handler, DatabaseManager databaseManager, ServerLobby serverLobby) {
         this.client1Handler = client1Handler;
         this.client2Handler = client2Handler;
         this.databaseManager = databaseManager;
+        this.serverLobby = serverLobby;
     }
 
     @Override
     public void run() {
         System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " successfully connected, received GameSession Thread");
 
-        // client1Handler & client2Handler GAME_START message, sending username, opponentUsername, isWhitePlayer
-
-        boolean isClient1Turn = true; // Client1 is WhitePlayer, Client2 is BlackPlayer
-        Message clientMessage = null;
-        while (true) {
-            ClientHandler acviteClientHandler = isClient1Turn ? client1Handler : client2Handler;
-            acviteClientHandler.getMessageHandler().sendMessage(MessageType.YOUR_TURN, "");
-        }
-    }
-}
-
-/*
-try {
-            String startMessage = "Succesful connection between Client " + client1Handler.getUsername() + " and Client " + client2Handler.getUsername() + "\nBoard: \n" + board;
-            client1Handler.getMessageHandler().sendMessage(MessageType.GAME_START, startMessage);
-            client2Handler.getMessageHandler().sendMessage(MessageType.GAME_START, startMessage);
+        try {
+            client1Handler.getMessageHandler().sendMessage(MessageType.GAME_START, new GameStartData(true, client2Handler.getUsername(), board.getGrid()));
+            client2Handler.getMessageHandler().sendMessage(MessageType.GAME_START, new GameStartData(false, client1Handler.getUsername(), board.getGrid()));
 
             boolean isClient1Turn = true; // Client1 is WhitePlayer, Client2 is BlackPlayer
-            Message clientMessage = null;
+            ClientHandler winnerClientHandler = null;
+            ClientHandler loserClientHandler = null;
+
             while (true) {
                 ClientHandler activeClientHandler = isClient1Turn ? client1Handler : client2Handler;
+                ClientHandler passiveClientHandler = isClient1Turn ? client2Handler : client1Handler;
 
-                activeClientHandler.getMessageHandler().sendMessage(MessageType.YOUR_TURN, "");
+                List<CheckerMove> availableMoves = board.getAvailableMoves(isClient1Turn);
+                if (availableMoves.isEmpty()) {
+                    winnerClientHandler = passiveClientHandler;
+                    loserClientHandler = activeClientHandler;
+                    break;
+                }
 
-                if ((clientMessage = activeClientHandler.getMessageHandler().receiveMessage()) == null) break;
+                activeClientHandler.getMessageHandler().sendMessage(MessageType.YOUR_TURN, availableMoves);
 
-                if (clientMessage.getContentAs(String.class).equals("---TERMINATE---")) {
+                Message clientMessage = activeClientHandler.getMessageHandler().receiveMessage();
+
+                if (clientMessage == null) {
+                    winnerClientHandler = passiveClientHandler;
+                    loserClientHandler = activeClientHandler;
                     break;
                 }
 
                 if (clientMessage.getType() == MessageType.MOVE) {
-                    String moveMessage = "Client " + activeClientHandler.getUsername() + " move: " + clientMessage.getContentAs(String.class);
-                    client1Handler.getMessageHandler().sendMessage(MessageType.BOARD_UPDATE, moveMessage);
-                    client2Handler.getMessageHandler().sendMessage(MessageType.BOARD_UPDATE, moveMessage);
+                    CheckerMove clientMove = clientMessage.getContentAs(CheckerMove.class);
+                    CheckerMove executableClientMove = null;
 
-                    isClient1Turn = !isClient1Turn;
+                    for (CheckerMove availableMove : availableMoves) {
+                        if (availableMove.getStartPosition().equals(clientMove.getStartPosition()) && availableMove.getEndPosition().equals(clientMove.getEndPosition())) {
+                            executableClientMove = availableMove;
+                            break;
+                        }
+                    }
+
+                    if (executableClientMove != null) {
+                        board.executeMove(executableClientMove);
+
+                        client1Handler.getMessageHandler().sendMessage(MessageType.BOARD_UPDATE, board.getGrid());
+                        client2Handler.getMessageHandler().sendMessage(MessageType.BOARD_UPDATE, board.getGrid());
+
+                        isClient1Turn = !isClient1Turn;
+                    } else {
+                        activeClientHandler.getMessageHandler().sendMessage(MessageType.ERROR, "Incorrect move");
+                    }
                 }
             }
 
-            client1Handler.getMessageHandler().sendMessage(MessageType.GAME_OVER, "");
-            client2Handler.getMessageHandler().sendMessage(MessageType.GAME_OVER, "");
+            if (winnerClientHandler != null && loserClientHandler != null) {
+                databaseManager.updateStats(winnerClientHandler.getClientId(), true);
+                databaseManager.updateStats(loserClientHandler.getClientId(), false);
+
+                List<ClientStats> leaderboard = databaseManager.getClientStats();
+
+                winnerClientHandler.getMessageHandler().sendMessage(MessageType.GAME_OVER, new GameOverData(true, leaderboard));
+                loserClientHandler.getMessageHandler().sendMessage(MessageType.GAME_OVER, new GameOverData(false, leaderboard));
+            }
+
+            handlePostGameDecision(client1Handler);
+            handlePostGameDecision(client2Handler);
         } catch (IOException e) {
             System.err.println("Error caught: " + e.getMessage());
-        } finally {
-            try { client1Handler.getSocket().close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
-            try { client2Handler.getSocket().close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
-            System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " session terminated");
+            try { client1Handler.getSocket().close(); } catch (IOException ex) { System.err.println("Error caught: " + ex.getMessage() ); }
+            try { client2Handler.getSocket().close(); } catch (IOException ex) { System.err.println("Error caught: " + ex.getMessage() ); }
         }
- */
+    }
+
+    private void handlePostGameDecision(ClientHandler clientHandler) {
+        new Thread(() -> {
+            try {
+                Message clientMessage = clientHandler.getMessageHandler().receiveMessage();
+                if (clientMessage != null && clientMessage.getType() == MessageType.PLAY_AGAIN) {
+                    serverLobby.addClientToQueue(clientHandler);
+                } else {
+                    clientHandler.getSocket().close();
+                }
+            } catch (IOException e) {
+                System.err.println("Error caught: " + e.getMessage());
+                try { clientHandler.getSocket().close(); } catch (IOException ex) { System.err.println("Error caught: " + ex.getMessage() ); }
+            }
+        }).start();
+    }
+}
