@@ -15,13 +15,8 @@ public class SocketService {
     private static final String SERVER_ADDRESS = "127.0.0.1";
     private static final int SERVER_PORT = 8080;
 
-    private final String username;
     private MessageHandler messageHandler;
     private Consumer<Message> handleServerMessage;
-
-    public SocketService(String username) {
-        this.username = username;
-    }
 
     public void setHandleServerMessage(Consumer<Message> handleServerMessage) {
         this.handleServerMessage = handleServerMessage;
@@ -29,14 +24,12 @@ public class SocketService {
 
     public void startSocketService() {
         new Thread(() -> {
-            try ( Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT); ) {
+            try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT)) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                 messageHandler = new MessageHandler(in, out);
 
                 System.out.println("Connected to server");
-
-                messageHandler.sendMessage(MessageType.JOIN, username);
 
                 Message serverMessage = null;
                 while ((serverMessage = messageHandler.receiveMessage()) != null) {

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="400.0" spacing="15.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.pk.checkers.client.LoginController">
+   <padding>
+      <Insets bottom="20.0" left="40.0" right="40.0" top="20.0" />
+   </padding>
+   <children>
+      <Label text="JavaFX-Socket-Checkers">
+         <font>
+            <Font name="System Bold" size="24.0" />
+         </font>
+      </Label>
+      <Label text="Enter username and password:" />
+      <TextField fx:id="usernameField" promptText="Username" />
+      <PasswordField fx:id="passwordField" promptText="Password" />
+      <Label fx:id="serverMessageLabel" textFill="RED" />
+      <HBox alignment="CENTER" prefHeight="0.0" prefWidth="320.0" spacing="20.0">
+         <children>
+            <Button mnemonicParsing="false" onAction="#handleSignIn" text="Sign in" />
+            <Button mnemonicParsing="false" onAction="#handleSignUp" text="Sign up" />
+         </children>
+      </HBox>
+   </children>
+</VBox>
