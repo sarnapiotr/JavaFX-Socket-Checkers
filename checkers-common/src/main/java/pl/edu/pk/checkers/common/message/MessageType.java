@@ -8,6 +8,7 @@ public enum MessageType {
     WAITING,
     GAME_START,
     YOUR_TURN,
+    OPPONENT_TURN,
     MOVE,
     BOARD_UPDATE,
     GAME_OVER,

@@ -45,6 +45,7 @@ public class GameSession implements Runnable {
                 }
 
                 activeClientHandler.getMessageHandler().sendMessage(MessageType.YOUR_TURN, availableMoves);
+                passiveClientHandler.getMessageHandler().sendMessage(MessageType.OPPONENT_TURN, "");
 
                 Message clientMessage = activeClientHandler.getMessageHandler().receiveMessage();
 
