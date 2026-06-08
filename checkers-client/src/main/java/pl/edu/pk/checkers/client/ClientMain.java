@@ -20,16 +20,15 @@ public class ClientMain extends Application {
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/pl/edu/pk/checkers/client/LoginView.fxml"));
-            Parent root = loader.load();
+            Parent loginRoot = loader.load();
 
             LoginController controller = loader.getController();
             controller.setSocketService(socketService);
 
-            Scene scene = new Scene(root);
+            Scene scene = new Scene(loginRoot);
             primaryStage.setTitle("JavaFX-Socket-Checkers Login");
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(400);
-            primaryStage.setMinHeight(300);
+            primaryStage.setResizable(false);
             primaryStage.show();
         } catch (IOException e) {
             System.err.println("Error caught: " + e.getMessage());
@@ -41,7 +40,7 @@ public class ClientMain extends Application {
         System.exit(0);
     }
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         launch(args);
     }
 }

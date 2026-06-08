@@ -26,6 +26,7 @@ public class GameSession implements Runnable {
         System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " successfully connected, received GameSession Thread");
 
         try {
+            Thread.sleep(100);
             client1Handler.getMessageHandler().sendMessage(MessageType.GAME_START, new GameStartData(true, client2Handler.getUsername(), board.getGrid()));
             client2Handler.getMessageHandler().sendMessage(MessageType.GAME_START, new GameStartData(false, client1Handler.getUsername(), board.getGrid()));
 
@@ -91,7 +92,7 @@ public class GameSession implements Runnable {
 
             handlePostGameDecision(client1Handler);
             handlePostGameDecision(client2Handler);
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             System.err.println("Error caught: " + e.getMessage());
             try { client1Handler.getSocket().close(); } catch (IOException ex) { System.err.println("Error caught: " + ex.getMessage() ); }
             try { client2Handler.getSocket().close(); } catch (IOException ex) { System.err.println("Error caught: " + ex.getMessage() ); }

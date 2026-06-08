@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 public class ServerMain {
     private static final int PORT = 8080;
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         System.out.println("Server started");
         DatabaseManager databaseManager = new DatabaseManager();
 
