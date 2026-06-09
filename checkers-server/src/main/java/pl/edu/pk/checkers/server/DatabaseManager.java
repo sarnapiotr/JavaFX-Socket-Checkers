@@ -6,12 +6,15 @@ import pl.edu.pk.checkers.common.message.ClientStats;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DatabaseManager {
     private static final String URL_SERVER = "jdbc:mysql://localhost:3306/";
     private static final String URL_DB = "jdbc:mysql://localhost:3306/checkers";
     private static final String USER = "root";
     private static final String PASSWORD = "";
+    private static final Logger logger = Logger.getLogger(DatabaseManager.class.getName());
 
     public DatabaseManager() {
         initDatabase();
@@ -22,10 +25,10 @@ public class DatabaseManager {
              Statement stmt = conn.createStatement()) {
 
             stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS checkers;");
-            System.out.println("Database 'checkers' checked/created");
+            logger.info("Database 'checkers' checked/created");
 
         } catch (SQLException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error caught", e);
         }
 
         try (Connection conn = DriverManager.getConnection(URL_DB, USER, PASSWORD);
@@ -38,10 +41,10 @@ public class DatabaseManager {
                     "gamesWon INT DEFAULT 0, " +
                     "gamesPlayed INT DEFAULT 0)");
 
-            System.out.println("Table 'clients' checked/created");
+            logger.info("Table 'clients' checked/created");
 
         } catch (SQLException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error caught", e);
         }
     }
 
@@ -64,7 +67,7 @@ public class DatabaseManager {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error caught", e);
         }
 
         return -1;
@@ -83,7 +86,7 @@ public class DatabaseManager {
 
             return true;
         } catch (SQLException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error caught", e);
             return false;
         }
     }
@@ -99,7 +102,7 @@ public class DatabaseManager {
 
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error caught", e);
         }
     }
 
@@ -119,7 +122,7 @@ public class DatabaseManager {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error caught", e);
         }
 
         return leaderboard;

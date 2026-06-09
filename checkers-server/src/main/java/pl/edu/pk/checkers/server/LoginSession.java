@@ -10,8 +10,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LoginSession implements Runnable {
+    private static final Logger logger = Logger.getLogger(LoginSession.class.getName());
     private final Socket socket;
     private final DatabaseManager databaseManager;
     private final ServerLobby serverLobby;
@@ -60,11 +63,11 @@ public class LoginSession implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error caught", e);
         } finally {
             if (!isLoggedIn) {
-                try { socket.close(); } catch (IOException e) { System.err.println("Error caught: " + e.getMessage()); }
-                System.out.println("Client disconnected before logging in");
+                try { socket.close(); } catch (IOException e) { logger.log(Level.SEVERE, "Error caught", e); }
+                logger.info("Client disconnected before logging in");
             }
         }
     }

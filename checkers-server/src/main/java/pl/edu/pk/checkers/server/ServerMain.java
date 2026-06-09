@@ -5,18 +5,23 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ServerMain {
     private static final int PORT = 8080;
+    private static final Logger logger = Logger.getLogger(ServerMain.class.getName());
 
     public static void main(String[] args) {
-        System.out.println("Server started");
+        ServerLogger.setupServerLogger();
+
+        logger.info("Server started");
         DatabaseManager databaseManager = new DatabaseManager();
 
         try (ServerSocket serverSocket = new ServerSocket(PORT);
               ExecutorService pool = Executors.newCachedThreadPool()) {
 
-            System.out.println("Server listening on port " + PORT);
+            logger.info("Server listening on port " + PORT);
             ServerLobby serverLobby = new ServerLobby(pool, databaseManager);
             pool.execute(serverLobby);
 
@@ -25,9 +30,9 @@ public class ServerMain {
                 pool.execute(new LoginSession(socket, databaseManager, serverLobby));
             }
         } catch (IOException e) {
-            System.err.println("Error caught: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error caught", e);
         }
 
-        System.out.println("Server terminated");
+        logger.info("Server terminated");
     }
 }

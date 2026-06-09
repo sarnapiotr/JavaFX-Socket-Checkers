@@ -6,8 +6,11 @@ import pl.edu.pk.checkers.common.message.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GameSession implements Runnable {
+    private static final Logger logger = Logger.getLogger(GameSession.class.getName());
     private final ClientHandler client1Handler; // Always WhitePlayer
     private final ClientHandler client2Handler; // Always BlackPlayer
     private final DatabaseManager databaseManager;
@@ -23,7 +26,7 @@ public class GameSession implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " successfully connected, received GameSession Thread");
+        logger.info("Clients: " + client1Handler.getUsername() + ", " + client2Handler.getUsername() + " successfully connected, received GameSession Thread");
 
         try {
             Thread.sleep(100);
@@ -93,9 +96,9 @@ public class GameSession implements Runnable {
             handlePostGameDecision(client1Handler);
             handlePostGameDecision(client2Handler);
         } catch (IOException | InterruptedException e) {
-            System.err.println("Error caught: " + e.getMessage());
-            try { client1Handler.getSocket().close(); } catch (IOException ex) { System.err.println("Error caught: " + ex.getMessage() ); }
-            try { client2Handler.getSocket().close(); } catch (IOException ex) { System.err.println("Error caught: " + ex.getMessage() ); }
+            logger.log(Level.SEVERE, "Error caught", e);
+            try { client1Handler.getSocket().close(); } catch (IOException ex) { logger.log(Level.SEVERE, "Error caught", ex); }
+            try { client2Handler.getSocket().close(); } catch (IOException ex) { logger.log(Level.SEVERE, "Error caught", ex); }
         }
     }
 
@@ -109,8 +112,8 @@ public class GameSession implements Runnable {
                     clientHandler.getSocket().close();
                 }
             } catch (IOException e) {
-                System.err.println("Error caught: " + e.getMessage());
-                try { clientHandler.getSocket().close(); } catch (IOException ex) { System.err.println("Error caught: " + ex.getMessage() ); }
+                logger.log(Level.SEVERE, "Error caught", e);
+                try { clientHandler.getSocket().close(); } catch (IOException ex) { logger.log(Level.SEVERE, "Error caught", ex); }
             }
         }).start();
     }
